@@ -17,11 +17,12 @@ spec:
     - list:
         elements:
           - env: dev
-            namespace: springbook-dev
+            values: enviroments/dev/values.yaml
           - env: staging
-            namespace: springbook-staging
+            values: enviroments/staging/values.yaml
           - env: prod
-            namespace: springbook-prod
+            values: enviroments/prod/values.yaml
+
   template:
     metadata:
       name: 'springbook-{{env}}'
