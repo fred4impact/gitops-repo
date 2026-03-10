@@ -33,6 +33,8 @@ spec:
         - name: {{ .Values.backend.name }}
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          workingDir: {{ .Values.backend.workDir | default "/app" }}
+          command: ["/opt/bilarn/startup.sh"]
           env:
             - name: MYSQL_USER
               valueFrom:
@@ -68,6 +70,11 @@ spec:
             - name: backend-config
               mountPath: {{ .Values.backend.configMountPath }}
               subPath: application.properties
+            - name: app-config-writable
+              mountPath: {{ .Values.backend.workDir | default "/app" }}
+            - name: vault-secrets-placeholder
+              mountPath: /vault/secrets
+              readOnly: true
       volumes:
         - name: backend-config
           configMap:
@@ -75,6 +82,11 @@ spec:
             items:
               - key: application.properties
                 path: application.properties
+        - name: app-config-writable
+          emptyDir: {}
+        - name: vault-secrets-placeholder
+          configMap:
+            name: {{ .Values.backend.vaultSecretsConfigMapName | default "backend-vault-placeholder" }}
 ---
 apiVersion: v1
 kind: Service

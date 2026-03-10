@@ -1,0 +1,12 @@
+{{- if .Values.backend.enabled }}
+# startup.sh appends /vault/secrets/databaseenv.txt to application.properties; provide empty file when Vault is not used
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.backend.vaultSecretsConfigMapName | default "backend-vault-placeholder" }}
+  namespace: {{ include "springbook.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+data:
+  databaseenv.txt: ""
+{{- end }}

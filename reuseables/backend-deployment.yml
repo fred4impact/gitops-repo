@@ -60,7 +60,7 @@ spec:
                   key: password
           volumeMounts:
             - name: backend-config
-              mountPath: /opt/bilarn/application.properties.orig  # ✅ matches app expectation
+              mountPath: /opt/bilarn/application.properties  # matches app expectation
               subPath: application.properties
       volumes:
         - name: backend-config

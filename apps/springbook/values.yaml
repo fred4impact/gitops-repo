@@ -22,7 +22,7 @@ mysql:
     pullPolicy: IfNotPresent
   replicas: 1
   port: 3306
-  # Credentials (stored in Secret mysql-creds)
+  # Credentials (Secret mysql-creds) — backend deployment uses same secret for MYSQL_USER/MYSQL_PASSWORD; keep in sync
   auth:
     username: bilarn
     password: password
@@ -60,7 +60,11 @@ backend:
   # Env from Secret mysql-creds (username -> MYSQL_USER, password -> MYSQL_PASSWORD)
   # ConfigMap name for application.properties
   configMapName: backendapp
-  configMountPath: "/opt/bilarn/application.properties.orig"
+  configMountPath: "/opt/bilarn/application.properties"
+  # Writable dir for startup.sh to create application.properties (image writes to CWD; default /app)
+  workDir: "/app"
+  # ConfigMap that provides /vault/secrets/databaseenv.txt (startup.sh appends it); use backend-vault-placeholder when not using Vault
+  vaultSecretsConfigMapName: "backend-vault-placeholder"
   # Wait for MySQL before starting (init container)
   initWaitForMysql: true
   initImage: busybox:1.28

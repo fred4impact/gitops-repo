@@ -53,7 +53,13 @@ backendConfig:
     hibernateDdlAuto: update
  
 
+# Use same credentials as backend (Secret mysql-creds); do not change without updating both
 mysql:
+  auth:
+    username: bilarn
+    password: password
+    rootPassword: password
+    database: bookdb
   resources:
     limits:
       cpu: 500m
