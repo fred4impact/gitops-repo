@@ -34,7 +34,6 @@ spec:
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           workingDir: {{ .Values.backend.workDir | default "/app" }}
-          command: ["/opt/bilarn/startup.sh"]
           env:
             - name: MYSQL_USER
               valueFrom:
