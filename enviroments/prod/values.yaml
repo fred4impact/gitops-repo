@@ -4,6 +4,8 @@
 namespace: springbook-prod
 
 backend:
+  enabled: true                        # ✅ needed for ConfigMap
+  configMapName: backend-config 
   replicas: 2
   image:
     repository: springbook-backend
@@ -21,7 +23,7 @@ backend:
 frontend:
   replicas: 2
   image:
-    repository: springbook-fontend
+    repository: springbook-frontend
     tag: "latest"  # Override via pipeline to specific tag
   service:
     nodePort: 32201
@@ -34,9 +36,22 @@ frontend:
       memory: 64Mi
 
 # Prod: validate only, never auto-create/drop schema
+
 backendConfig:
+  logging:                             # ✅ required by ConfigMap
+    level_org_springframework: INFO
+    level_com_mkyong: INFO
+    level_com_zaxxer: WARN
+    level_root: INFO
+  management:
+    endpointsExposure: health,info
+    healthProbesEnabled: true
+  datasource:
+    hikariConnectionTimeout: 30000
+    hikariMaximumPoolSize: 10
   jpa:
-    hibernateDdlAuto: validate
+    hibernateDdlAuto: update
+ 
 
 mysql:
   resources:

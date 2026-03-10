@@ -4,9 +4,11 @@
 namespace: springbook-dev
 
 backend:
+  enabled: true                        # ✅ needed for ConfigMap
+  configMapName: backend-config        # ✅ must match your backend.configmap.yaml
   replicas: 1
   image:
-    repository: springbook-backend
+    repository: springbook-backend     # ✅ your backend image
     tag: "latest"
     pullPolicy: IfNotPresent
   service:
@@ -22,7 +24,7 @@ backend:
 frontend:
   replicas: 1
   image:
-    repository: springbook-fontend
+    repository: springbook-frontend    # ✅ fix typo ("fontend" → "frontend")
     tag: "latest"
     pullPolicy: IfNotPresent
   service:
@@ -35,8 +37,18 @@ frontend:
       cpu: 25m
       memory: 64Mi
 
-# Dev: allow schema updates (or create-drop for fresh DB)
 backendConfig:
+  logging:                             # ✅ required by ConfigMap
+    level_org_springframework: INFO
+    level_com_mkyong: INFO
+    level_com_zaxxer: WARN
+    level_root: INFO
+  management:
+    endpointsExposure: health,info
+    healthProbesEnabled: true
+  datasource:
+    hikariConnectionTimeout: 30000
+    hikariMaximumPoolSize: 10
   jpa:
     hibernateDdlAuto: update
 

@@ -4,6 +4,8 @@
 namespace: springbook-staging
 
 backend:
+  enabled: true                        # ✅ needed for ConfigMap
+  configMapName: backend-config 
   replicas: 2
   image:
     repository: springbook-backend
@@ -21,7 +23,7 @@ backend:
 frontend:
   replicas: 2
   image:
-    repository: springbook-fontend
+    repository: springbook-frontend
     tag: "latest"
   service:
     nodePort: 32101
@@ -35,6 +37,17 @@ frontend:
 
 # Staging: update schema, do not drop data
 backendConfig:
+  logging:                             # ✅ required by ConfigMap
+    level_org_springframework: INFO
+    level_com_mkyong: INFO
+    level_com_zaxxer: WARN
+    level_root: INFO
+  management:
+    endpointsExposure: health,info
+    healthProbesEnabled: true
+  datasource:
+    hikariConnectionTimeout: 30000
+    hikariMaximumPoolSize: 10
   jpa:
     hibernateDdlAuto: update
 
