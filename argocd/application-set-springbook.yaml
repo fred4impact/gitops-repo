@@ -40,7 +40,7 @@ spec:
           releaseName: springbook-{{env}}
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{namespace}}'
+        namespace: 'springbook-{{env}}'
       syncPolicy:
         automated:
           prune: true
