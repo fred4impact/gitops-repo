@@ -6,6 +6,7 @@ namespace: springbook-staging
 backend:
   replicas: 2
   image:
+    repository: springbook-backend
     tag: "latest"
   service:
     nodePort: 32100
@@ -20,6 +21,7 @@ backend:
 frontend:
   replicas: 2
   image:
+    repository: springbook-fontend
     tag: "latest"
   service:
     nodePort: 32101

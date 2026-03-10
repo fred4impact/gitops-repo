@@ -6,6 +6,7 @@ namespace: springbook-prod
 backend:
   replicas: 2
   image:
+    repository: springbook-backend
     tag: "latest"  # Override via pipeline to specific tag (e.g. fb123)
   service:
     nodePort: 32200
@@ -20,6 +21,7 @@ backend:
 frontend:
   replicas: 2
   image:
+    repository: springbook-fontend
     tag: "latest"  # Override via pipeline to specific tag
   service:
     nodePort: 32201
