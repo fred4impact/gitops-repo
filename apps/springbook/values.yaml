@@ -60,7 +60,7 @@ backend:
   # Env from Secret mysql-creds (username -> MYSQL_USER, password -> MYSQL_PASSWORD)
   # ConfigMap name for application.properties
   configMapName: backendapp
-  configMountPath: "/opt/bilarn/application.properties"
+  configMountPath: "/opt/bilarn/application.properties.orig"
   # Wait for MySQL before starting (init container)
   initWaitForMysql: true
   initImage: busybox:1.28

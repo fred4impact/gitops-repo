@@ -1,0 +1,72 @@
+{{- if .Values.backend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backendapp
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: backendapp
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backendapp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backendapp
+    spec:
+      initContainers:
+        - name: init-mydb
+          image: busybox:1.28
+          command:
+            - sh
+            - -c
+            - |
+              until nslookup mysql-{{ .Values.namespace }}.svc.cluster.local; do echo waiting for mysql; sleep 2; done
+      containers:
+        - name: backendapp
+          image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 45
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 5
+          resources:
+            limits: {{ toYaml .Values.backend.resources.limits | nindent 12 }}
+            requests: {{ toYaml .Values.backend.resources.requests | nindent 12 }}
+          env:
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: username
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: password
+          volumeMounts:
+            - name: backend-config
+              mountPath: /opt/bilarn/application.properties.orig  # ✅ matches app expectation
+              subPath: application.properties
+      volumes:
+        - name: backend-config
+          configMap:
+            name: {{ .Values.backend.configMapName }}
+            items:
+              - key: application.properties
+                path: application.properties
+{{- end }}
