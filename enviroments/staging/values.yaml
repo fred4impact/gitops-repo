@@ -1,0 +1,40 @@
+# Springbook Helm values – STAGING
+# Overrides for apps/springbook chart
+
+namespace: springbook-staging
+
+backend:
+  replicas: 2
+  image:
+    tag: "latest"
+  service:
+    nodePort: 32100
+  resources:
+    limits:
+      cpu: 400m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+frontend:
+  replicas: 2
+  image:
+    tag: "latest"
+  service:
+    nodePort: 32101
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Staging: update schema, do not drop data
+backendConfig:
+  jpa:
+    hibernateDdlAuto: update
+
+mysql:
+  resources: {}

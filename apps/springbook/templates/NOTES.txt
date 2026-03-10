@@ -1,0 +1,18 @@
+1. Springbook stack has been installed in namespace: {{ include "springbook.namespace" . }}.
+
+2. Components:
+   - MySQL:  {{ .Values.mysql.name }} (Secret: mysql-creds, Service: {{ .Values.mysql.service.name }}:{{ .Values.mysql.port }})
+   - Backend: {{ .Values.backend.name }} (Service: {{ .Values.backend.service.name }}, NodePort: {{ .Values.backend.service.nodePort }})
+   - Frontend: {{ .Values.frontend.name }} (Service: {{ .Values.frontend.service.name }}, NodePort: {{ .Values.frontend.service.nodePort }})
+
+3. Ensure imagePullSecrets (e.g. awsecr-cred) exists in the namespace for backend/frontend if using a private registry:
+   kubectl create secret docker-registry awsecr-cred --docker-server=<ECR_URL> --docker-username=AWS --docker-password=$(aws ecr get-login-password) -n {{ include "springbook.namespace" . }}
+
+4. Override backend/frontend image for your build:
+   helm upgrade --set backend.image.repository=<ECR>/backend --set backend.image.tag=fb<BUILD_ID> \
+               --set frontend.image.repository=<ECR>/frontend --set frontend.image.tag=fb<BUILD_ID> \
+               <release> ./springbook -n {{ include "springbook.namespace" . }}
+
+5. Access (NodePort):
+   - Frontend: http://<node-ip>:{{ .Values.frontend.service.nodePort }}
+   - Backend API: http://<node-ip>:{{ .Values.backend.service.nodePort }}

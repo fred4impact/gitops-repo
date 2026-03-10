@@ -1,0 +1,46 @@
+# Springbook Helm values – PROD
+# Overrides for apps/springbook chart
+
+namespace: springbook-prod
+
+backend:
+  replicas: 2
+  image:
+    tag: "latest"  # Override via pipeline to specific tag (e.g. fb123)
+  service:
+    nodePort: 32200
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+frontend:
+  replicas: 2
+  image:
+    tag: "latest"  # Override via pipeline to specific tag
+  service:
+    nodePort: 32201
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Prod: validate only, never auto-create/drop schema
+backendConfig:
+  jpa:
+    hibernateDdlAuto: validate
+
+mysql:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi

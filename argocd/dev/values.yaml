@@ -1,0 +1,40 @@
+# Springbook Helm values – DEV
+# Overrides for apps/springbook chart
+
+namespace: springbook-dev
+
+backend:
+  replicas: 1
+  image:
+    tag: "latest"
+  service:
+    nodePort: 32000
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+frontend:
+  replicas: 1
+  image:
+    tag: "latest"
+  service:
+    nodePort: 32001
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+# Dev: allow schema updates (or create-drop for fresh DB)
+backendConfig:
+  jpa:
+    hibernateDdlAuto: update
+
+mysql:
+  resources: {}

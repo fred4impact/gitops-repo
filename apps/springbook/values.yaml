@@ -1,0 +1,143 @@
+# Default values for springbook (bilarn-springbook)
+# Aligned with k8s/ manifests and docker-compose
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Namespace for all resources (default matches existing k8s namespace)
+namespace: springbook
+
+# -- Image pull secret for ECR/private registry (backend & frontend)
+imagePullSecrets:
+  - name: awsecr-cred
+
+# -- MySQL database
+mysql:
+  enabled: true
+  name: mysql
+  # Matches k8s/backend/deploymysql.yml
+  image:
+    repository: mysql
+    tag: "8.1"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 3306
+  # Credentials (stored in Secret mysql-creds)
+  auth:
+    username: bilarn
+    password: password
+    rootPassword: password
+    database: bookdb
+  service:
+    name: mysql-svc
+    type: NodePort
+    port: 3306
+  resources: {}
+  # readinessProbe
+  readinessProbe:
+    tcpSocket:
+      port: 3306
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 5
+
+# -- Spring Boot backend
+backend:
+  enabled: true
+  name: backendapp
+  image:
+    # Override with ECR URL and tag (e.g. 578690312663.dkr.ecr.us-east-1.amazonaws.com/backend/sp-bk-backend:fb123)
+    repository: 578690312663.dkr.ecr.us-east-1.amazonaws.com/backend/sp-bk-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  port: 8080
+  service:
+    name: backend-svc
+    type: NodePort
+    port: 8080
+    nodePort: 32000
+  # Env from Secret mysql-creds (username -> MYSQL_USER, password -> MYSQL_PASSWORD)
+  # ConfigMap name for application.properties
+  configMapName: backendapp
+  configMountPath: "/opt/wezva/application.properties"
+  # Wait for MySQL before starting (init container)
+  initWaitForMysql: true
+  initImage: busybox:1.28
+  resources:
+    limits:
+      cpu: 400m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 45
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 5
+
+# -- Backend ConfigMap (application.properties content)
+backendConfig:
+  # JDBC URL: use mysql service name and database from values
+  # spring.datasource.url is built in template from mysql.service.name + mysql.auth.database
+  logging:
+    level_org_springframework: INFO
+    level_com_mkyong: INFO
+    level_com_zaxxer: ERROR
+    level_root: ERROR
+  management:
+    endpointsExposure: "*"
+    healthProbesEnabled: true
+  datasource:
+    hikariConnectionTimeout: 20000
+    hikariMaximumPoolSize: 5
+  jpa:
+    hibernateDdlAuto: create-drop  # use update or validate in production
+
+# -- Frontend (Vite + nginx)
+frontend:
+  enabled: true
+  name: frontendapp
+  image:
+    # Override with ECR URL and tag for frontend image
+    repository: 578690312663.dkr.ecr.us-east-1.amazonaws.com/frontend/sp-bk-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  port: 80
+  service:
+    name: frontend-svc
+    type: NodePort
+    port: 80
+    nodePort: 32001
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 10
+    timeoutSeconds: 5
+    periodSeconds: 5

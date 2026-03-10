@@ -1,0 +1,28 @@
+{{- if .Values.backend.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.backend.configMapName }}
+  namespace: {{ include "springbook.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.backend.name }}
+data:
+  application.properties: |
+    logging.level.org.springframework={{ .Values.backendConfig.logging.level_org_springframework }}
+    logging.level.com.mkyong={{ .Values.backendConfig.logging.level_com_mkyong }}
+    logging.level.com.zaxxer={{ .Values.backendConfig.logging.level_com_zaxxer }}
+    logging.level.root={{ .Values.backendConfig.logging.level_root }}
+
+    management.endpoints.web.exposure.include={{ .Values.backendConfig.management.endpointsExposure }}
+    management.endpoints.web.exposure.exclude=
+    management.endpoint.health.probes.enabled={{ .Values.backendConfig.management.healthProbesEnabled }}
+
+    spring.datasource.hikari.connectionTimeout={{ .Values.backendConfig.datasource.hikariConnectionTimeout }}
+    spring.datasource.hikari.maximumPoolSize={{ .Values.backendConfig.datasource.hikariMaximumPoolSize }}
+
+    spring.datasource.url={{ include "springbook.backend.jdbcUrl" . }}
+    spring.datasource.username=${MYSQL_USER}
+    spring.datasource.password=${MYSQL_PASSWORD}
+
+    spring.jpa.hibernate.ddl-auto={{ .Values.backendConfig.jpa.hibernateDdlAuto }}
+{{- end }}

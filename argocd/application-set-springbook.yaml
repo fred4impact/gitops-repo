@@ -1,0 +1,49 @@
+# Argo CD ApplicationSet – deploys springbook Helm chart to dev, staging, prod.
+# Apply to the cluster where Argo CD runs:
+#   kubectl apply -f application-set-springbook.yaml -n argocd
+#
+# Set repoURL to your gitops repo (this repo), e.g.:
+#   https://gitlab.com/your-org/gitops-repo.git
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: springbook
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: springbook
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: springbook-dev
+          - env: staging
+            namespace: springbook-staging
+          - env: prod
+            namespace: springbook-prod
+  template:
+    metadata:
+      name: 'springbook-{{env}}'
+      labels:
+        env: '{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/fred4impact/gitops-repo.git  # REPLACE with your gitops repo URL
+        targetRevision: HEAD
+        path: apps/springbook
+        helm:
+          valueFiles:
+            - ../../enviroments/{{env}}/values.yaml
+          releaseName: springbook-{{env}}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
