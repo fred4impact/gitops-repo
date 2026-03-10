@@ -47,7 +47,7 @@ backend:
   name: backendapp
   image:
     # Override with ECR URL and tag (e.g. 578690312663.dkr.ecr.us-east-1.amazonaws.com/backend/sp-bk-backend:fb123)
-    repository: 578690312663.dkr.ecr.us-east-1.amazonaws.com/backend/sp-bk-backend
+    repository: runtesting/springbook-backend
     tag: "latest"
     pullPolicy: IfNotPresent
   replicas: 2
@@ -60,7 +60,7 @@ backend:
   # Env from Secret mysql-creds (username -> MYSQL_USER, password -> MYSQL_PASSWORD)
   # ConfigMap name for application.properties
   configMapName: backendapp
-  configMountPath: "/opt/wezva/application.properties"
+  configMountPath: "/opt/bilarn/application.properties"
   # Wait for MySQL before starting (init container)
   initWaitForMysql: true
   initImage: busybox:1.28
@@ -110,7 +110,7 @@ frontend:
   name: frontendapp
   image:
     # Override with ECR URL and tag for frontend image
-    repository: 578690312663.dkr.ecr.us-east-1.amazonaws.com/frontend/sp-bk-frontend
+    repository: runtesting/springbook-frontend
     tag: "latest"
     pullPolicy: IfNotPresent
   replicas: 2
