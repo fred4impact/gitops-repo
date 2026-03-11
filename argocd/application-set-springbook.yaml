@@ -1,35 +1,43 @@
-generators:
-  - list:
-      elements:
-        - env: dev
-        - env: stage
-        - env: prod
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: springbook
+  namespace: argocd
 
-template:
-  metadata:
-    name: springbook-{{env}}
-    labels:
-      env: "{{env}}"
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+          - env: stage
+          - env: prod 
+          
 
-  spec:
-    project: default
+  template:
+    metadata:
+      name: springbook-{{env}}
+      labels:
+        env: "{{env}}"
 
-    source:
-      repoURL: https://github.com/fred4impact/gitops-repo.git
-      targetRevision: HEAD
-      path: apps/springbook
-      helm:
-        releaseName: springbook-{{env}}
-        valueFiles:
-          - ../../environments/{{env}}/values.yaml
+    spec:
+      project: default
 
-    destination:
-      server: https://kubernetes.default.svc
-      namespace: springbook-{{env}}
+      source:
+        repoURL: https://github.com/fred4impact/gitops-repo.git
+        targetRevision: HEAD
+        path: apps/springbook
+        helm:
+          releaseName: springbook-{{env}}
+          valueFiles:
+            - ../../environments/{{env}}/values.yaml
 
-    syncPolicy:
-      automated:
-        prune: true
-        selfHeal: true
-      syncOptions:
-        - CreateNamespace=true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: springbook-{{env}}
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
