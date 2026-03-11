@@ -3,13 +3,15 @@
 
 namespace: springbook-prod
 
+# -- Backend
 backend:
-  enabled: true                        # ✅ needed for ConfigMap
-  configMapName: backend-config 
-  replicas: 2
+  enabled: true
+  configMapName: backend-config
+  replicas: 3                             # Increase for production HA
   image:
     repository: springbook-backend
-    tag: "latest"  # Override via pipeline to specific tag (e.g. fb123)
+    tag: "latest"                         # Override via CI/CD pipeline with specific tag
+    pullPolicy: IfNotPresent
   service:
     nodePort: 32200
   resources:
@@ -19,26 +21,35 @@ backend:
     requests:
       cpu: 200m
       memory: 256Mi
+  workDir: "/app"
+  vaultSecretsConfigMapName: "backend-vault-placeholder"
+  initWaitForMysql: true
+  initImage: busybox:1.28
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 45
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 5
 
-frontend:
-  replicas: 2
-  image:
-    repository: springbook-frontend
-    tag: "latest"  # Override via pipeline to specific tag
-  service:
-    nodePort: 32201
-  resources:
-    limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
+# -- Backend environment variables
+backendEnv:
+  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
+  SPRING_DATASOURCE_USERNAME: "{{ .Values.mysql.auth.username }}"
+  SPRING_DATASOURCE_PASSWORD: "{{ .Values.mysql.auth.password }}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "{{ .Values.backendConfig.jpa.hibernateDdlAuto }}"
 
-# Prod: validate only, never auto-create/drop schema
-
+# -- Backend ConfigMap
 backendConfig:
-  logging:                             # ✅ required by ConfigMap
+  logging:
     level_org_springframework: INFO
     level_com_mkyong: INFO
     level_com_zaxxer: WARN
@@ -50,10 +61,26 @@ backendConfig:
     hikariConnectionTimeout: 30000
     hikariMaximumPoolSize: 10
   jpa:
-    hibernateDdlAuto: update
- 
+    hibernateDdlAuto: validate    # Validate only, never auto-create/drop schema
 
-# Use same credentials as backend (Secret mysql-creds); do not change without updating both
+# -- Frontend
+frontend:
+  replicas: 3                            # HA for production
+  image:
+    repository: springbook-frontend
+    tag: "latest"                        # Override via pipeline
+    pullPolicy: IfNotPresent
+  service:
+    nodePort: 32201
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# -- MySQL
 mysql:
   auth:
     username: bilarn
@@ -67,3 +94,6 @@ mysql:
     requests:
       cpu: 250m
       memory: 256Mi
+  service:
+    name: mysql-svc
+    port: 3306

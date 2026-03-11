@@ -3,12 +3,13 @@
 
 namespace: springbook-dev
 
+# -- Backend
 backend:
-  enabled: true                        # ✅ needed for ConfigMap
-  configMapName: backend-config        # ✅ must match your backend.configmap.yaml
+  enabled: true                        # must be true for backend deployment
+  configMapName: backend-config        # must match backend ConfigMap
   replicas: 1
   image:
-    repository: springbook-backend     # ✅ your backend image
+    repository: springbook-backend
     tag: "latest"
     pullPolicy: IfNotPresent
   service:
@@ -20,25 +21,36 @@ backend:
     requests:
       cpu: 50m
       memory: 128Mi
+  # Remove startup.sh references
+  workDir: "/app"
+  vaultSecretsConfigMapName: "backend-vault-placeholder"
+  initWaitForMysql: true
+  initImage: busybox:1.28
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 45
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 5
 
-frontend:
-  replicas: 1
-  image:
-    repository: springbook-frontend    # ✅ fix typo ("fontend" → "frontend")
-    tag: "latest"
-    pullPolicy: IfNotPresent
-  service:
-    nodePort: 32001
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 25m
-      memory: 64Mi
+# -- Backend environment variables for Spring Boot
+backendEnv:
+  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
+  SPRING_DATASOURCE_USERNAME: "{{ .Values.mysql.auth.username }}"
+  SPRING_DATASOURCE_PASSWORD: "{{ .Values.mysql.auth.password }}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "{{ .Values.backendConfig.jpa.hibernateDdlAuto }}"
 
+# -- Backend ConfigMap values
 backendConfig:
-  logging:                             # ✅ required by ConfigMap
+  logging:
     level_org_springframework: INFO
     level_com_mkyong: INFO
     level_com_zaxxer: WARN
@@ -52,7 +64,24 @@ backendConfig:
   jpa:
     hibernateDdlAuto: update
 
-# Use same credentials as backend (Secret mysql-creds); do not change without updating both
+# -- Frontend
+frontend:
+  replicas: 1
+  image:
+    repository: springbook-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    nodePort: 32001
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+# -- MySQL (DEV)
 mysql:
   auth:
     username: bilarn
@@ -60,3 +89,6 @@ mysql:
     rootPassword: password
     database: bookdb
   resources: {}
+  service:
+    name: mysql-svc
+    port: 3306

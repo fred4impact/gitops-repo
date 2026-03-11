@@ -3,13 +3,15 @@
 
 namespace: springbook-staging
 
+# -- Backend
 backend:
-  enabled: true                        # ✅ needed for ConfigMap
+  enabled: true                        # required for backend deployment & ConfigMap
   configMapName: backend-config 
   replicas: 2
   image:
     repository: springbook-backend
     tag: "latest"
+    pullPolicy: IfNotPresent
   service:
     nodePort: 32100
   resources:
@@ -19,25 +21,36 @@ backend:
     requests:
       cpu: 100m
       memory: 128Mi
+  # Remove startup.sh references
+  workDir: "/app"
+  vaultSecretsConfigMapName: "backend-vault-placeholder"
+  initWaitForMysql: true
+  initImage: busybox:1.28
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 45
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 5
 
-frontend:
-  replicas: 2
-  image:
-    repository: springbook-frontend
-    tag: "latest"
-  service:
-    nodePort: 32101
-  resources:
-    limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 50m
-      memory: 64Mi
+# -- Backend environment variables for Spring Boot
+backendEnv:
+  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
+  SPRING_DATASOURCE_USERNAME: "{{ .Values.mysql.auth.username }}"
+  SPRING_DATASOURCE_PASSWORD: "{{ .Values.mysql.auth.password }}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "{{ .Values.backendConfig.jpa.hibernateDdlAuto }}"
 
-# Staging: update schema, do not drop data
+# -- Backend ConfigMap values
 backendConfig:
-  logging:                             # ✅ required by ConfigMap
+  logging:
     level_org_springframework: INFO
     level_com_mkyong: INFO
     level_com_zaxxer: WARN
@@ -49,9 +62,26 @@ backendConfig:
     hikariConnectionTimeout: 30000
     hikariMaximumPoolSize: 10
   jpa:
-    hibernateDdlAuto: update
+    hibernateDdlAuto: update  # Do not drop data in staging
 
-# Use same credentials as backend (Secret mysql-creds); do not change without updating both
+# -- Frontend
+frontend:
+  replicas: 2
+  image:
+    repository: springbook-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    nodePort: 32101
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# -- MySQL (STAGING)
 mysql:
   auth:
     username: bilarn
@@ -59,3 +89,6 @@ mysql:
     rootPassword: password
     database: bookdb
   resources: {}
+  service:
+    name: mysql-svc
+    port: 3306

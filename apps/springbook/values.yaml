@@ -15,14 +15,12 @@ imagePullSecrets:
 mysql:
   enabled: true
   name: mysql
-  # Matches k8s/backend/deploymysql.yml
   image:
     repository: mysql
     tag: "8.1"
     pullPolicy: IfNotPresent
   replicas: 1
   port: 3306
-  # Credentials (Secret mysql-creds) — backend deployment uses same secret for MYSQL_USER/MYSQL_PASSWORD; keep in sync
   auth:
     username: bilarn
     password: password
@@ -33,7 +31,6 @@ mysql:
     type: NodePort
     port: 3306
   resources: {}
-  # readinessProbe
   readinessProbe:
     tcpSocket:
       port: 3306
@@ -46,7 +43,6 @@ backend:
   enabled: true
   name: backendapp
   image:
-    # Override with ECR URL and tag (e.g. 578690312663.dkr.ecr.us-east-1.amazonaws.com/backend/sp-bk-backend:fb123)
     repository: runtesting/springbook-backend
     tag: "latest"
     pullPolicy: IfNotPresent
@@ -57,15 +53,9 @@ backend:
     type: NodePort
     port: 8080
     nodePort: 32000
-  # Env from Secret mysql-creds (username -> MYSQL_USER, password -> MYSQL_PASSWORD)
-  # ConfigMap name for application.properties
-  configMapName: backendapp
-  configMountPath: "/opt/bilarn/application.properties"
-  # Writable dir for startup.sh to create application.properties (image writes to CWD; default /app)
+  # Remove startup.sh and configMap mounts
   workDir: "/app"
-  # ConfigMap that provides /vault/secrets/databaseenv.txt (startup.sh appends it); use backend-vault-placeholder when not using Vault
   vaultSecretsConfigMapName: "backend-vault-placeholder"
-  # Wait for MySQL before starting (init container)
   initWaitForMysql: true
   initImage: busybox:1.28
   resources:
@@ -90,10 +80,8 @@ backend:
     timeoutSeconds: 5
     periodSeconds: 5
 
-# -- Backend ConfigMap (application.properties content)
+# -- Backend configuration (env-based, no startup.sh)
 backendConfig:
-  # JDBC URL: use mysql service name and database from values
-  # spring.datasource.url is built in template from mysql.service.name + mysql.auth.database
   logging:
     level_org_springframework: INFO
     level_com_mkyong: INFO
@@ -113,7 +101,6 @@ frontend:
   enabled: true
   name: frontendapp
   image:
-    # Override with ECR URL and tag for frontend image
     repository: runtesting/springbook-frontend
     tag: "latest"
     pullPolicy: IfNotPresent
@@ -145,3 +132,10 @@ frontend:
     initialDelaySeconds: 10
     timeoutSeconds: 5
     periodSeconds: 5
+
+# -- Backend environment variables for Spring Boot
+backendEnv:
+  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
+  SPRING_DATASOURCE_USERNAME: "{{ .Values.mysql.auth.username }}"
+  SPRING_DATASOURCE_PASSWORD: "{{ .Values.mysql.auth.password }}"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "{{ .Values.backendConfig.jpa.hibernateDdlAuto }}"
