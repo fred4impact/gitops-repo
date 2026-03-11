@@ -10,7 +10,7 @@ backend:
   replicas: 3                             # Increase for production HA
   image:
     repository: springbook-backend
-    tag: "latest"                         # Override via CI/CD pipeline with specific tag
+    tag: "latest"            
     pullPolicy: IfNotPresent
   service:
     nodePort: 32200
