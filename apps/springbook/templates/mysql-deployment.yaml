@@ -6,6 +6,8 @@ metadata:
   namespace: {{ include "springbook.namespace" . }}
   labels:
     app: {{ .Values.mysql.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   replicas: {{ .Values.mysql.replicas }}
   selector:
@@ -61,6 +63,8 @@ metadata:
   namespace: {{ include "springbook.namespace" . }}
   labels:
     app: {{ .Values.mysql.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   type: {{ .Values.mysql.service.type }}
   ports:

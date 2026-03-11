@@ -7,6 +7,8 @@ metadata:
   namespace: {{ include "springbook.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ .Values.backend.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 data:
   databaseenv.txt: ""
 {{- end }}

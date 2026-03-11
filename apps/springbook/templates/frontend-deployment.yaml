@@ -6,6 +6,8 @@ metadata:
   namespace: {{ include "springbook.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ .Values.frontend.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   replicas: {{ .Values.frontend.replicas }}
   selector:
@@ -56,6 +58,8 @@ metadata:
   namespace: {{ include "springbook.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ .Values.frontend.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   type: {{ .Values.frontend.service.type }}
   ports:

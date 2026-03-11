@@ -10,7 +10,7 @@ spec:
         elements:
           - env: dev
           - env: stage
-          - env: stage
+          - env: prod
           
 
   template:
