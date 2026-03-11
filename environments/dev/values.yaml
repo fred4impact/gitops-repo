@@ -10,7 +10,7 @@ backend:
   replicas: 1
   image:
     repository: springbook-backend
-    tag: "latest"
+    tag: "dev"
     pullPolicy: IfNotPresent
   service:
     nodePort: 32000
@@ -69,7 +69,7 @@ frontend:
   replicas: 1
   image:
     repository: springbook-frontend
-    tag: "latest"
+    tag: "dev"
     pullPolicy: IfNotPresent
   service:
     nodePort: 32001

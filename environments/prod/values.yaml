@@ -10,7 +10,7 @@ backend:
   replicas: 3                             # Increase for production HA
   image:
     repository: springbook-backend
-    tag: "latest"            
+    tag: "dev"            
     pullPolicy: IfNotPresent
   service:
     nodePort: 32200
@@ -68,7 +68,7 @@ frontend:
   replicas: 3                            # HA for production
   image:
     repository: springbook-frontend
-    tag: "latest"                        # Override via pipeline
+    tag: "dev"                        # Override via pipeline
     pullPolicy: IfNotPresent
   service:
     nodePort: 32201
