@@ -9,8 +9,8 @@ spec:
     - list:
         elements:
           - env: dev
-          - env: staging
-          - env: prod
+          - env: stage
+          
 
   template:
     metadata:
