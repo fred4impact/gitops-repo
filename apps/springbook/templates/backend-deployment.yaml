@@ -35,16 +35,20 @@ spec:
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           workingDir: {{ .Values.backend.workDir | default "/app" }}
           env:
-            - name: MYSQL_USER
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
+            - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: mysql-creds
                   key: username
-            - name: MYSQL_PASSWORD
+            - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-creds
                   key: password
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: {{ .Values.backendConfig.jpa.hibernateDdlAuto | quote }}
           ports:
             - containerPort: {{ .Values.backend.port }}
           livenessProbe:
@@ -66,21 +70,12 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: backend-config
-              mountPath: {{ .Values.backend.configMountPath }}
-              subPath: application.properties
             - name: app-config-writable
               mountPath: {{ .Values.backend.workDir | default "/app" }}
             - name: vault-secrets-placeholder
               mountPath: /vault/secrets
               readOnly: true
       volumes:
-        - name: backend-config
-          configMap:
-            name: {{ .Values.backend.configMapName }}
-            items:
-              - key: application.properties
-                path: application.properties
         - name: app-config-writable
           emptyDir: {}
         - name: vault-secrets-placeholder
