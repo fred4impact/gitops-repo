@@ -35,6 +35,33 @@ curl http://localhost:32001
 kubectl get applicationsets -n argocd
 kubectl describe applicationset springbook -n argocd
 
+# --- ApplicationSet created but no apps in Argo CD UI ---
+# 1. Check if ApplicationSet controller is running (required to generate Applications)
+kubectl get pods -n argocd | grep -E 'applicationset|NAME'
+# You should see a pod like: argocd-applicationset-controller-xxxxx
+
+# 2. If the controller is missing, install it first, then re-apply the ApplicationSet
+#    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/applicationset/v0.9.0/manifests/install.yaml
+#    Or stable:
+#    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/applicationset/stable/manifests/install.yaml
+#    kubectl apply -f argocd/application-set-springbook.yaml
+
+# 3. Check controller logs for errors
+kubectl logs -n argocd -l app.kubernetes.io/name=argocd-applicationset-controller --tail=50
+
+# 4. Check ApplicationSet status and conditions
+kubectl get applicationset springbook -n argocd -o yaml
+kubectl describe applicationset springbook -n argocd
+
+# 5. After controller is running, Applications should appear
+kubectl get applications -n argocd
+
+# 6. If apps exist (kubectl get applications) but UI is empty or shows "Unknown":
+#    - Hard-refresh the Argo CD UI (e.g. Ctrl+Shift+R) or re-login.
+#    - If Sync Status stays "Unknown", check repo-server: kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-repo-server
+#    - Repo-server must be Running/Ready; if its init container is CrashLoopBackOff, sync and UI can be broken.
+#    - Restart repo-server: kubectl delete pod -n argocd -l app.kubernetes.io/name=argocd-repo-server
+
 
 kubectl get pods -n springbook-dev
 kubectl describe pod <pod-name> -n springbook-dev
