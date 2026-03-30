@@ -1,0 +1,53 @@
+# Optional: Ingress for canary traffic split – prod only
+# Use with an Ingress controller that supports canary (e.g. NGINX Ingress canary annotations).
+# Apply after backend-stable-service and backend-canary-service exist.
+---
+# Main (stable) backend – receives 100% when not in canary, or traffic not sent to canary
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-stable-ingress
+  namespace: springbook-prod
+  labels:
+    app.kubernetes.io/name: backendapp
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: backend.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-stable-svc
+                port:
+                  number: 8080
+---
+# Canary backend – enable and set weight via annotations (NGINX Ingress example)
+# Example: kubectl annotate ingress backend-canary-ingress -n springbook-prod \
+#   nginx.ingress.kubernetes.io/canary=true \
+#   nginx.ingress.kubernetes.io/canary-weight=20
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend-canary-ingress
+  namespace: springbook-prod
+  labels:
+    app.kubernetes.io/name: backendapp
+  # annotations:
+  #   nginx.ingress.kubernetes.io/canary: "true"
+  #   nginx.ingress.kubernetes.io/canary-weight: "0"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: backend.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-canary-svc
+                port:
+                  number: 8080

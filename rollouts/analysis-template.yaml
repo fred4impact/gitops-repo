@@ -1,0 +1,51 @@
+# Optional: AnalysisTemplate for canary – prod only
+# Reference this in the Rollout's canary steps to run analysis (e.g. success rate) before auto-promotion.
+# Example Rollout step: - analysis: { templates: [{ templateName: success-rate }] }
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-success-rate
+  namespace: springbook-prod
+spec:
+  metrics:
+    - name: success-rate
+      interval: 1m
+      count: 2
+      successCondition: result >= 0.95
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring.svc:9090
+          query: |
+            sum(rate(http_requests_total{namespace="springbook-prod",app="backendapp",status=~"2.."}[5m]))
+            /
+            sum(rate(http_requests_total{namespace="springbook-prod",app="backendapp"}[5m]))
+---
+# Simpler: run a Job that checks canary health (no Prometheus required)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: backend-job-check
+  namespace: springbook-prod
+spec:
+  metrics:
+    - name: curl-canary
+      interval: 30s
+      count: 2
+      successCondition: result == 0
+      failureLimit: 1
+      provider:
+        job:
+          spec:
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: curl
+                    image: curlimages/curl:latest
+                    command:
+                      - sh
+                      - -c
+                      - |
+                        code=$(curl -s -o /dev/null -w "%{http_code}" http://backend-canary-svc.springbook-prod.svc.cluster.local:8080/actuator/health/readiness)
+                        [ "$code" = "200" ] && exit 0 || exit 1

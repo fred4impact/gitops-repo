@@ -1,0 +1,21 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/fred4impact/healthcare-booking
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+
+springProfile: default
+
+db:
+  host: mysql.default.svc.cluster.local
+
+vault:
+  role: springboot-role
+
+istio:
+  gateway: healthcare-gateway

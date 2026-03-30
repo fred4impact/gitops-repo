@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: healthcare-booking-helm-appset
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            valuesFile: values-dev.yaml
+            namespace: healthcare-dev
+          - env: staging
+            valuesFile: values-staging.yaml
+            namespace: healthcare-staging
+          - env: prod
+            valuesFile: values-prod.yaml
+            namespace: healthcare-prod
+
+  template:
+    metadata:
+      name: healthcare-{{env}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/fred4impact/healthcare-booking
+        targetRevision: main
+        chart: healthcare-booking-helm
+        helm:
+          valueFiles:
+            - "{{valuesFile}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

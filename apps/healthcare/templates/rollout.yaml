@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: springboot-backend
+spec:
+  replicas: { { .Values.replicaCount } }
+
+  strategy:
+    canary:
+      trafficRouting:
+        istio:
+          virtualService:
+            name: springboot
+            routes:
+              - http
+      steps:
+        - setWeight: 20
+        - pause: { duration: 60 }
+        - setWeight: 50
+        - pause: { duration: 120 }
+        - setWeight: 100
+
+  selector:
+    matchLabels:
+      app: springboot
+
+  template:
+    metadata:
+      labels:
+        app: springboot
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "{{ .Values.vault.role }}"
+        vault.hashicorp.com/agent-inject-secret-db: "secret/data/springboot"
+        vault.hashicorp.com/agent-inject-template-db: |
+          {{- with secret "secret/data/springboot" -}}
+          DB_USERNAME={{ .Data.data.DB_USERNAME }}
+          DB_PASSWORD={{ .Data.data.DB_PASSWORD }}
+          {{- end }}
+
+    spec:
+      serviceAccountName: springboot-sa
+
+      containers:
+        - name: springboot
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: { { .Values.image.pullPolicy } }
+          ports:
+            - containerPort: 8080
+          command: ["/bin/sh"]
+          args:
+            - -c
+            - |
+              export $(cat /vault/secrets/db | xargs)
+              java -jar app.jar
+
+          envFrom:
+            - configMapRef:
+                name: springboot-config
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10

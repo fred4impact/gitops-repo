@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: springboot-config
+data:
+  SPRING_PROFILES_ACTIVE: { { .Values.springProfile } }
+  DB_HOST: { { .Values.db.host } }

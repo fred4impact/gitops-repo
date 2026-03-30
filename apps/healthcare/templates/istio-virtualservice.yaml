@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: springboot
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - { { .Values.istio.gateway } }
+  http:
+    - route:
+        - destination:
+            host: springboot
+            subset: stable
+          weight: 100
+        - destination:
+            host: springboot
+            subset: canary
+          weight: 0

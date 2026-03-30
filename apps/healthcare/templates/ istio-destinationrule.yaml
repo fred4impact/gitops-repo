@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: springboot
+spec:
+  host: springboot
+  subsets:
+    - name: stable
+      labels:
+        app: springboot
+    - name: canary
+      labels:
+        app: springboot

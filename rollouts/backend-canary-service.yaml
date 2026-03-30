@@ -1,0 +1,18 @@
+# Canary Service for backend canary – prod only
+# Argo Rollouts controller will update the selector to target the canary ReplicaSet.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-canary-svc
+  namespace: springbook-prod
+  labels:
+    app.kubernetes.io/name: backendapp
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: backendapp

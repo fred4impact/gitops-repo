@@ -1,0 +1,19 @@
+# Stable Service for backend canary – prod only
+# Argo Rollouts controller will update the selector to target the stable ReplicaSet.
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-stable-svc
+  namespace: springbook-prod
+  labels:
+    app.kubernetes.io/name: backendapp
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 32200
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: backendapp

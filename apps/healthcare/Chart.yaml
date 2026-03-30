@@ -1,0 +1,6 @@
+apiVersion: v2
+name: healthcare-booking
+description: Helm chart for Healthcare Booking Spring Boot app
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
