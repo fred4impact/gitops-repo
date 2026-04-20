@@ -1,0 +1,13 @@
+{{- if and .Values.frontend.enabled .Values.frontend.runtimeConfig.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.frontend.runtimeConfig.configMapName }}
+  namespace: {{ include "springbook.namespace" . }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.frontend.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+data:
+  config.json: {{ dict "apiBaseUrl" .Values.frontend.runtimeConfig.apiBaseUrl | toJson | quote }}
+{{- end }}

@@ -1,12 +1,12 @@
-# Springbook Helm values – STAGING
-# Overrides for apps/springbook chart
+# Springbook Helm values – UAT
+# Overrides for apps/springbook chart (mounted backend ConfigMap + MYSQL_* secret)
 
 namespace: book-uat
 
 # -- Backend
 backend:
-  enabled: true                        # required for backend deployment & ConfigMap
-  configMapName: backend-config 
+  enabled: true
+  configMapName: backend-config
   replicas: 2
   image:
     repository: runtesting/backend-springbook
@@ -21,8 +21,7 @@ backend:
     requests:
       cpu: 100m
       memory: 128Mi
-  # Remove startup.sh references
-  workDir: "/app"
+  workDir: "/opt/bilarn"
   vaultSecretsConfigMapName: "backend-vault-placeholder"
   initWaitForMysql: true
   initImage: busybox:1.28
@@ -41,14 +40,7 @@ backend:
     timeoutSeconds: 5
     periodSeconds: 5
 
-# -- Backend environment variables for Spring Boot
-backendEnv:
-  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
-  SPRING_DATASOURCE_USERNAME: "{{ .Values.mysql.auth.username }}"
-  SPRING_DATASOURCE_PASSWORD: "{{ .Values.mysql.auth.password }}"
-  SPRING_JPA_HIBERNATE_DDL_AUTO: "{{ .Values.backendConfig.jpa.hibernateDdlAuto }}"
-
-# -- Backend ConfigMap values
+# -- Backend ConfigMap → /opt/bilarn/config/application.properties
 backendConfig:
   logging:
     level_org_springframework: INFO
@@ -71,6 +63,10 @@ frontend:
     repository: runtesting/frontend-springbook
     tag: "v3"
     pullPolicy: IfNotPresent
+  runtimeConfig:
+    enabled: true
+    configMapName: frontend-runtime-config
+    apiBaseUrl: ""
   service:
     nodePort: 32101
   resources:
@@ -81,7 +77,7 @@ frontend:
       cpu: 50m
       memory: 64Mi
 
-# -- MySQL (STAGING)
+# -- MySQL (UAT)
 mysql:
   auth:
     username: bilarn

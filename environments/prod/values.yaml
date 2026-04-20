@@ -1,5 +1,5 @@
 # Springbook Helm values – PROD
-# Overrides for apps/springbook chart
+# Overrides for apps/springbook chart (mounted backend ConfigMap + MYSQL_* secret)
 
 namespace: book-prod
 
@@ -21,7 +21,7 @@ backend:
     requests:
       cpu: 200m
       memory: 256Mi
-  workDir: "/app"
+  workDir: "/opt/bilarn"
   vaultSecretsConfigMapName: "backend-vault-placeholder"
   initWaitForMysql: true
   initImage: busybox:1.28
@@ -40,14 +40,7 @@ backend:
     timeoutSeconds: 5
     periodSeconds: 5
 
-# -- Backend environment variables
-backendEnv:
-  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}"
-  SPRING_DATASOURCE_USERNAME: "{{ .Values.mysql.auth.username }}"
-  SPRING_DATASOURCE_PASSWORD: "{{ .Values.mysql.auth.password }}"
-  SPRING_JPA_HIBERNATE_DDL_AUTO: "{{ .Values.backendConfig.jpa.hibernateDdlAuto }}"
-
-# -- Backend ConfigMap
+# -- Backend ConfigMap → /opt/bilarn/config/application.properties
 backendConfig:
   logging:
     level_org_springframework: INFO
@@ -65,11 +58,16 @@ backendConfig:
 
 # -- Frontend
 frontend:
-  replicas: 3                            # HA for production
+  replicas: 3
   image:
     repository: runtesting/frontend-springbook
-    tag: "v3"                        # Override via pipeline
+    tag: "v3"
     pullPolicy: IfNotPresent
+  runtimeConfig:
+    enabled: true
+    configMapName: frontend-runtime-config
+    # Set if the UI must call an absolute API URL; empty keeps in-cluster nginx routing
+    apiBaseUrl: ""
   service:
     nodePort: 32201
   resources:

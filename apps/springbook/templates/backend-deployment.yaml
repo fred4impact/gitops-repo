@@ -29,7 +29,12 @@ spec:
           command:
             - sh
             - -c
-            - "until nslookup {{ .Values.mysql.service.name }}.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done"
+            - |
+              echo "Waiting for MySQL service..."
+              until nc -z {{ .Values.mysql.service.name }} {{ .Values.mysql.port | int }}; do
+                echo "Waiting for MySQL..."
+                sleep 2
+              done
       {{- end }}
       containers:
         - name: {{ .Values.backend.name }}
@@ -38,20 +43,20 @@ spec:
           ports:
             - containerPort: {{ .Values.backend.port }}
           env:
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://{{ .Values.mysql.service.name }}:{{ .Values.mysql.port }}/{{ .Values.mysql.auth.database }}
-            - name: SPRING_DATASOURCE_USERNAME
+            - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
                   name: mysql-creds
                   key: username
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-creds
                   key: password
-            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
-              value: {{ .Values.backendConfig.jpa.hibernateDdlAuto | quote }}
+          volumeMounts:
+            - name: backend-config
+              mountPath: /opt/bilarn/config
+              readOnly: true
           livenessProbe:
             httpGet:
               path: {{ .Values.backend.livenessProbe.httpGet.path }}
@@ -70,6 +75,10 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+      volumes:
+        - name: backend-config
+          configMap:
+            name: {{ .Values.backend.configMapName }}
 ---
 apiVersion: v1
 kind: Service

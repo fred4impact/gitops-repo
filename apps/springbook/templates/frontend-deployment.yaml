@@ -22,10 +22,22 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.frontend.runtimeConfig.enabled }}
+      volumes:
+        - name: runtime-config
+          configMap:
+            name: {{ .Values.frontend.runtimeConfig.configMapName }}
+      {{- end }}
       containers:
         - name: {{ .Values.frontend.name }}
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          {{- if .Values.frontend.runtimeConfig.enabled }}
+          volumeMounts:
+            - name: runtime-config
+              mountPath: /usr/share/nginx/html/config.json
+              subPath: config.json
+          {{- end }}
           ports:
             - containerPort: {{ .Values.frontend.port }}
           env:
