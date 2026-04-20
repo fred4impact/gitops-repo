@@ -1,7 +1,7 @@
 # Springbook Helm values – STAGING
 # Overrides for apps/springbook chart
 
-namespace: springbook-staging
+namespace: book-uat
 
 # -- Backend
 backend:
@@ -9,8 +9,8 @@ backend:
   configMapName: backend-config 
   replicas: 2
   image:
-    repository: springbook-backend
-    tag: "dev"
+    repository: runtesting/backend-springbook
+    tag: "v2"
     pullPolicy: IfNotPresent
   service:
     nodePort: 32100
@@ -68,8 +68,8 @@ backendConfig:
 frontend:
   replicas: 2
   image:
-    repository: springbook-frontend
-    tag: "dev"
+    repository: runtesting/frontend-springbook
+    tag: "v3"
     pullPolicy: IfNotPresent
   service:
     nodePort: 32101

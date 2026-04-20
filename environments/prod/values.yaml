@@ -1,7 +1,7 @@
 # Springbook Helm values – PROD
 # Overrides for apps/springbook chart
 
-namespace: springbook-prod
+namespace: book-prod
 
 # -- Backend
 backend:
@@ -9,8 +9,8 @@ backend:
   configMapName: backend-config
   replicas: 3                             # Increase for production HA
   image:
-    repository: springbook-backend
-    tag: "dev"            
+    repository: runtesting/backend-springbook
+    tag: "v2"            
     pullPolicy: IfNotPresent
   service:
     nodePort: 32200
@@ -67,8 +67,8 @@ backendConfig:
 frontend:
   replicas: 3                            # HA for production
   image:
-    repository: springbook-frontend
-    tag: "dev"                        # Override via pipeline
+    repository: runtesting/frontend-springbook
+    tag: "v3"                        # Override via pipeline
     pullPolicy: IfNotPresent
   service:
     nodePort: 32201

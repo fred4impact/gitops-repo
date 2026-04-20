@@ -43,7 +43,7 @@ backend:
   enabled: true
   name: backendapp
   image:
-    repository: runtesting/springbook-backend
+    repository: runtesting/backend-springbook:v2
     tag: "latest"
     pullPolicy: IfNotPresent
   replicas: 2
@@ -101,7 +101,7 @@ frontend:
   enabled: true
   name: frontendapp
   image:
-    repository: runtesting/springbook-frontend
+    repository: runtesting/frontend-springbook:v3
     tag: "latest"
     pullPolicy: IfNotPresent
   replicas: 2

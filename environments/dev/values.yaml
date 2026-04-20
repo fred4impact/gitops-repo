@@ -1,7 +1,7 @@
 # Springbook Helm values – DEV
 # Overrides for apps/springbook chart
 
-namespace: springbook-dev
+namespace: book-dev
 
 # -- Backend
 backend:
@@ -9,8 +9,8 @@ backend:
   configMapName: backend-config        # must match backend ConfigMap
   replicas: 1
   image:
-    repository: springbook-backend
-    tag: "dev"
+    repository: runtesting/backend-springbook
+    tag: "v2"
     pullPolicy: IfNotPresent
   service:
     nodePort: 32000
@@ -66,10 +66,10 @@ backendConfig:
 
 # -- Frontend
 frontend:
-  replicas: 1
+  replicas: 2
   image:
-    repository: springbook-frontend
-    tag: "dev"
+    repository: runtesting/frontend-springbookd
+    tag: "v3"
     pullPolicy: IfNotPresent
   service:
     nodePort: 32001
