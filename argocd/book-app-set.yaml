@@ -9,26 +9,25 @@ spec:
         repoURL: https://github.com/fred4impact/gitops-repo.git
         revision: HEAD
         directories:
-        - path: environments/*
-      template:
-        metadata:
-            name: '{{path.basename}}'
-        spec:
-            project: default
-            source:
-              repoURL: https://github.com/fred4impact/gitops-repo.git
-              targetRevision: master 
-              path: apps/springbook
-              helm:
-                valueFiles:
-                  - ../environments/{{path.basename}}/values.yaml
-            destination:
-              server: https://kubernetes.default.svc
-              namespace: '{{path.basename}}'
-            syncPolicy:
-              automated:
-                prune: true
-                selfHeal: true
-              syncOptions:
-                - CreateNamespace=true
-    
+          - path: environments/*
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/fred4impact/gitops-repo.git
+        targetRevision: master
+        path: apps/springbook
+        helm:
+          valueFiles:
+            - ../../environments/{{path.basename}}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
