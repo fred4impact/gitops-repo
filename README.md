@@ -6,6 +6,8 @@ This flow allows the team to control and choose exactly which build versions are
 
 This repository stores Kubernetes GitOps configuration for deploying applications across multiple environments (`dev`, `staging`, `prod`).
 
+![GitOps flow diagram](gitops.png)
+
 ## What this repo does
 
 - Keeps Helm charts and environment-specific values in Git.
