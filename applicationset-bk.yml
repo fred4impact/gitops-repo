@@ -9,7 +9,7 @@ spec:
         repoURL: https://github.com/fred4impact/gitops-repo.git
         revision: HEAD
         directories:
-          - path: environments/*
+          - path: envs/*
   template:
     metadata:
       name: '{{path.basename}}'
@@ -21,7 +21,7 @@ spec:
         path: apps/springbook
         helm:
           valueFiles:
-            - ../../environments/{{path.basename}}/values.yaml
+            - ../../envs/{{path.basename}}/values.yaml
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{path.basename}}'
